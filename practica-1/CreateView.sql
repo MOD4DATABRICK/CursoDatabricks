@@ -1,0 +1,41 @@
+-- Databricks notebook source
+-- MAGIC %sql
+-- MAGIC -- Consulta optimizada para contar la cantidad de transacciones, calcular el total, agregar el tipo de tarjeta y la última fecha de transacción del cliente (en formato legible)
+-- MAGIC CREATE OR REPLACE VIEW berka_view_databricks AS
+-- MAGIC WITH LastTransaction AS (
+-- MAGIC   SELECT
+-- MAGIC     a.account_id,
+-- MAGIC     DATE_FORMAT(MAX(FROM_UNIXTIME(UNIX_TIMESTAMP(CONCAT('19', t.date), 'yyyyMMdd'))), 'yyyy-MM-dd') AS ultima_fecha_de_transaccion
+-- MAGIC   FROM
+-- MAGIC     account a
+-- MAGIC   LEFT JOIN
+-- MAGIC     trans t ON a.account_id = t.account_id
+-- MAGIC   GROUP BY
+-- MAGIC     a.account_id
+-- MAGIC )
+-- MAGIC SELECT
+-- MAGIC     c.client_id,
+-- MAGIC     COUNT(t.trans_id) AS cantidad_de_transacciones,
+-- MAGIC     MAX(ca.type) AS tipo_de_tarjeta,
+-- MAGIC     lt.ultima_fecha_de_transaccion
+-- MAGIC FROM
+-- MAGIC     client c
+-- MAGIC JOIN
+-- MAGIC     account a ON c.district_id = a.district_id
+-- MAGIC LEFT JOIN
+-- MAGIC     disp d ON a.account_id = d.account_id
+-- MAGIC LEFT JOIN
+-- MAGIC     card ca ON d.disp_id = ca.disp_id
+-- MAGIC LEFT JOIN
+-- MAGIC     trans t ON a.account_id = t.account_id
+-- MAGIC LEFT JOIN
+-- MAGIC     LastTransaction lt ON a.account_id = lt.account_id
+-- MAGIC GROUP BY
+-- MAGIC     c.client_id, lt.ultima_fecha_de_transaccion;
+-- MAGIC
+-- MAGIC
+-- MAGIC
+
+-- COMMAND ----------
+
+select * from berka_view_databricks
